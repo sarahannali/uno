@@ -1,4 +1,5 @@
 import { CARD_TYPES, BASIC_COLORS, MAX_NUMBER_CARD, MIN_NUMBER_CARD, WILD_COLOR, MIN_DUPLICATE_NUMBER_CARD, ACTIONS } from "./constants";
+import { GetNextPlayerIdx } from "./players";
 
 const CreateCard = (type, value, color, idx) => {
   return {
@@ -64,59 +65,31 @@ export const CreateCards = () => {
   return cards;
 }
 
-export const IsValidCard = (deck, card) => {
+export const IsValidCard = (deck, card, colorOverride) => {
   const { color } = card;
   const lastCard = deck[deck.length - 1];
-  console.log("CARD: ", card)
-  console.log("LAST CARD: ", lastCard);
 
   if (color === WILD_COLOR) {
     return true;
   }
-  console.log("COLOR SAME: ", lastCard.color === card.color)
-  console.log("VALUE SAME: ", lastCard.value === card.value)
-  console.log("BOTH:", lastCard.color === card.color || lastCard.value === card.value)
-  return lastCard.color === card.color || lastCard.value === card.value;
+
+  return lastCard.color === card.color || card.color === colorOverride || lastCard.value === card.value;
 }
 
-export const GetNextPlayerIdx = (players, currentPlayerIndex, indexOffset, isReverse) => {
-  return (currentPlayerIndex + (indexOffset * (isReverse ? -1 : +1))) % players.length
-}
+export const DrawCards = (deck, drawNumber, hand) => {
+  const newDeck = [...deck];
+  const removedCards = newDeck.splice(0, drawNumber);
 
-export const PlayActionCard = (card, players, currentPlayerIndex, isReverse, playerHandsById, deck) => {
-  const updatedState = {
-    nextPlayer: GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse),
-    updatedReverse: isReverse,
-    updatedDeck: deck,
-    updatedPlayerHands: playerHandsById
+  // if draw over?
+  return {
+    updatedHand: hand.concat(removedCards),
+    updatedDeck: newDeck
+  };
+};
+
+export const PlayCard = (handOne, handTwo, cardToRemove) => {
+  return {
+    updatedHandOne: handOne.filter((card) => card.id != cardToRemove.id),
+    updatedHandTwo: [...handTwo, cardToRemove]
   }
-
-  switch (card.value) {
-    case ACTIONS.DRAW_TWO:
-      const { removedCards, updatedDeck } = DrawCards(state.deck, 2);
-      const nextPlayersHand = playerHandsById[nextPlayer.id];
-
-      updatedState.updatedDeck = updatedDeck;
-      updatedState.updatedPlayerHands[updatedState.nextPlayer.id] = [
-        ...nextPlayersHand,
-        removedCards
-      ];
-      break;
-    case ACTIONS.REVERSE:
-      const reverse = !isReverse;
-
-      updatedState.isReverse = reverse;
-      updatedState.nextPlayer = GetNextPlayerIdx(players, currentPlayerIndex, -1, reverse);
-      break;
-    case ACTIONS.SKIP:
-      return {
-        nextPlayerIndex: GetNextPlayerIdx(players, currentPlayerIndex, +2, isReverse)
-      }
-    case ACTIONS.WILD:
-      break;
-    case ACTIONS.WILD_DRAW_FOUR:
-      break;
-  }
-
-  return updatedState;
-}
+};

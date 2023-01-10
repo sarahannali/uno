@@ -18,21 +18,3 @@ export const ShuffleDeck = (deck) => {
 
   return shuffledDeck;
 };
-
-export const DrawCards = (deck, drawNumber, hand) => {
-  const newDeck = [...deck];
-  const removedCards = newDeck.splice(0, drawNumber);
-
-  // if draw over?
-  return {
-    updatedHand: hand.concat(removedCards),
-    updatedDeck: newDeck
-  };
-};
-
-export const PlayCard = (handOne, handTwo, cardToRemove) => {
-  return {
-    updatedHandOne: handOne.filter((card) => card.id != cardToRemove.id),
-    updatedHandTwo: [...handTwo, cardToRemove]
-  }
-};

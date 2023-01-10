@@ -1,7 +1,8 @@
 // tip: docs @ https://docs.urturn.app/docs/API/backend#functions
-import { GetNextPlayerIdx, IsValidCard } from './cards';
+import { IsValidCard, PlayCard, DrawCards } from './cards';
+import { GetNextPlayerIdx } from './players';
 import { ACTIONS, CARD_TYPES, MOVE_TYPES } from './constants';
-import { CreateDeck, DrawCards, ShuffleDeck, PlayCard } from './deck';
+import { ShuffleDeck, CreateDeck } from './deck';
 
 
 function onRoomStart(roomState) {
@@ -11,7 +12,8 @@ function onRoomStart(roomState) {
       discardPile: [],
       playerHandsById: {},
       currentPlayerIndex: null,
-      isReverse: false
+      isReverse: false,
+      colorOverride: null
     }
   }
 }
@@ -36,8 +38,8 @@ function onPlayerQuit(player, roomState) {
 
 function onPlayerMove(player, move, roomState) {
   const { players, state } = roomState;
-  const { deck, discardPile, isReverse, playerHandsById, currentPlayerIndex } = state;
-  const { type, card } = move;
+  const { deck, discardPile, isReverse, playerHandsById, currentPlayerIndex, colorOverride } = state;
+  const { type, card, colorChoice } = move;
 
   switch (type) {
     case MOVE_TYPES.START_GAME: {
@@ -62,8 +64,9 @@ function onPlayerMove(player, move, roomState) {
       if (player.id !== players[currentPlayerIndex].id) {
         throw new Error("It's not your turn!");
       }
+      
       const playerHand = playerHandsById[player.id];
-      if (IsValidCard(discardPile, card)) {
+      if (IsValidCard(discardPile, card, colorOverride)) {
         const { 
           updatedHandOne: updatedPlayerHand,
           updatedHandTwo: updatedDiscardPile
@@ -71,6 +74,7 @@ function onPlayerMove(player, move, roomState) {
 
         state.discardPile = updatedDiscardPile;
         state.playerHandsById[player.id] = updatedPlayerHand;
+        state.colorOverride = null;
         
         if (card.type === CARD_TYPES.NUMBER) {
           state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
@@ -100,16 +104,19 @@ function onPlayerMove(player, move, roomState) {
               break;
             }
             case ACTIONS.WILD:
-              // allow them to pick the next color
+              state.colorOverride = colorChoice;
+              state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+              
               break;
             case ACTIONS.WILD_DRAW_FOUR: {
-              // allow them to pick the next color
-              const nextPlayer = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+              const nextPlayer = players[GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse)];
               
               const { updatedHand, updatedDeck } = DrawCards(deck, 4, playerHandsById[nextPlayer.id]);
         
+              state.colorOverride = colorChoice;
               state.deck = updatedDeck;
               state.playerHandsById[nextPlayer.id] = updatedHand;
+              state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
               break;
             }
           }
