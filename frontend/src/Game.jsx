@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import client from '@urturn/client'
 import styles from './Game.module.css';
 import { MOVE_TYPES } from './constants';
+import Card from './Card';
 
 const EMPTY_CARD = {
   type: '',
@@ -29,9 +30,11 @@ function Game() {
 
   const {
     state: {
-      playerHandsById,
-      discardPile = []
-    } = {}
+      playerHandsById = [],
+      discardPile = [],
+      currentPlayerIndex = 0
+    } = {},
+    players = []
   } = roomState;
   // console.log(playerHands[curPlr.id])
 
@@ -44,14 +47,13 @@ function Game() {
     setupCurPlr();
   }, []);
 
-  console.log("DISCARD PILE: ", discardPile)
   const topCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : EMPTY_CARD;
-  console.log("TOP CARD: ", topCard)
 
   return (
     <div>
       <h1 className={styles['game-title']}>TODO: Implement your game UI here!</h1>
       <p className={styles.description}>Current Plr: {curPlr?.username}</p>
+      <p className={styles.description}>Player to Move: {players && players[currentPlayerIndex] && players[currentPlayerIndex].id}</p>
       <div style={{ color: 'white'}}>TOP CARD: {topCard.value + ' ' + topCard.color}</div>
       <button onClick={() => client.makeMove({ type: MOVE_TYPES.START_GAME })}>START GAME</button>
       <p></p>
@@ -59,7 +61,7 @@ function Game() {
       <p></p>
       {
         (curPlr && playerHandsById && playerHandsById[curPlr.id]) && playerHandsById[curPlr.id].map((card) => 
-          <button onClick={() => client.makeMove({ type: MOVE_TYPES.PLAY_CARD, card: card })}>{card.type} {card.value} {card.color}</button>
+          <Card card={card} />
         )
       }
     </div>

@@ -20,7 +20,6 @@ function onPlayerJoin(player, roomState) {
   const { state } = roomState;
 
   const { updatedHand, updatedDeck } = DrawCards(state.deck, 7, []);
-  console.log("UPDAED HAND: ", updatedHand)
   state.playerHandsById[player.id] = updatedHand;
   state.deck = updatedDeck;
 
@@ -37,10 +36,9 @@ function onPlayerQuit(player, roomState) {
 
 function onPlayerMove(player, move, roomState) {
   const { players, state } = roomState;
-  const { deck, discardPile, isReverse, playerHandsById } = state;
+  const { deck, discardPile, isReverse, playerHandsById, currentPlayerIndex } = state;
   const { type, card } = move;
 
-  console.log("STATE 1: ", state)
   switch (type) {
     case MOVE_TYPES.START_GAME: {
       const { updatedHand, updatedDeck } = DrawCards(deck, 1, discardPile);
@@ -61,7 +59,9 @@ function onPlayerMove(player, move, roomState) {
       return { state }
     }
     case MOVE_TYPES.PLAY_CARD:
-      console.log("1: ", state)
+      if (player.id !== players[currentPlayerIndex].id) {
+        throw new Error("It's not your turn!");
+      }
       const playerHand = playerHandsById[player.id];
       if (IsValidCard(discardPile, card)) {
         const { 
@@ -72,54 +72,56 @@ function onPlayerMove(player, move, roomState) {
         state.discardPile = updatedDiscardPile;
         state.playerHandsById[player.id] = updatedPlayerHand;
         
-        // if (card.type === CARD_TYPES.ACTION || card.type === CARD_TYPES.WILD) {
-        //   switch (card.value) {
-        //     case ACTIONS.DRAW_TWO: {
-        //       const nextPlayer = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+        if (card.type === CARD_TYPES.NUMBER) {
+          state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+        } else if (card.type === CARD_TYPES.ACTION || card.type === CARD_TYPES.WILD) {
+          switch (card.value) {
+            case ACTIONS.DRAW_TWO: {
+              const nextPlayer = players[GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse)];
               
-        //       const { updatedHand, updatedDeck } = DrawCards(deck, 2, playerHandsById[nextPlayer.id]);
+              const { updatedHand, updatedDeck } = DrawCards(deck, 2, playerHandsById[nextPlayer.id]);
         
-        //       state.deck = updatedDeck;
-        //       state.playerHandsById[nextPlayer.id] = updatedHand;
-        //       break;
-        //     }
-        //     case ACTIONS.REVERSE: {
-        //       const newReverse = !isReverse;
+              state.deck = updatedDeck;
+              state.playerHandsById[nextPlayer.id] = updatedHand;
+              state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+              break;
+            }
+            case ACTIONS.REVERSE: {
+              const newReverse = !isReverse;
 
-        //       state.isReverse = newReverse;
-        //       state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, newReverse);
+              state.isReverse = newReverse;
+              state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +1, newReverse);
 
-        //       break;
-        //     }
-        //     case ACTIONS.SKIP: {
-        //       state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +2, isReverse)
+              break;
+            }
+            case ACTIONS.SKIP: {
+              state.currentPlayerIndex = GetNextPlayerIdx(players, currentPlayerIndex, +2, isReverse);
 
-        //       break;
-        //     }
-        //     case ACTIONS.WILD:
-        //       // allow them to pick the next color
-        //       break;
-        //     case ACTIONS.WILD_DRAW_FOUR: {
-        //       // allow them to pick the next color
-        //       const nextPlayer = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
+              break;
+            }
+            case ACTIONS.WILD:
+              // allow them to pick the next color
+              break;
+            case ACTIONS.WILD_DRAW_FOUR: {
+              // allow them to pick the next color
+              const nextPlayer = GetNextPlayerIdx(players, currentPlayerIndex, +1, isReverse);
               
-        //       const { updatedHand, updatedDeck } = DrawCards(deck, 4, playerHandsById[nextPlayer.id]);
+              const { updatedHand, updatedDeck } = DrawCards(deck, 4, playerHandsById[nextPlayer.id]);
         
-        //       state.deck = updatedDeck;
-        //       state.playerHandsById[nextPlayer.id] = updatedHand;
-        //       break;
-        //     }
-        //   }
-        // }
+              state.deck = updatedDeck;
+              state.playerHandsById[nextPlayer.id] = updatedHand;
+              break;
+            }
+          }
+        }
 
-        console.log("RETURNING STATE: ", state)
         return { state };
       } else throw new Error("Invalid card!");
     case MOVE_TYPES.UNO:
       break;
   }
 
-  return {}
+  return { state }
 }
 
 // Export these functions so UrTurn runner can run these functions whenever the associated event

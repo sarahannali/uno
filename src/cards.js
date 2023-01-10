@@ -67,15 +67,20 @@ export const CreateCards = () => {
 export const IsValidCard = (deck, card) => {
   const { color } = card;
   const lastCard = deck[deck.length - 1];
+  console.log("CARD: ", card)
+  console.log("LAST CARD: ", lastCard);
 
   if (color === WILD_COLOR) {
     return true;
   }
+  console.log("COLOR SAME: ", lastCard.color === card.color)
+  console.log("VALUE SAME: ", lastCard.value === card.value)
+  console.log("BOTH:", lastCard.color === card.color || lastCard.value === card.value)
   return lastCard.color === card.color || lastCard.value === card.value;
 }
 
 export const GetNextPlayerIdx = (players, currentPlayerIndex, indexOffset, isReverse) => {
-  return (currentPlayerIndex + (indexOffset * isReverse ? -1 : +1)) % players.length
+  return (currentPlayerIndex + (indexOffset * (isReverse ? -1 : +1))) % players.length
 }
 
 export const PlayActionCard = (card, players, currentPlayerIndex, isReverse, playerHandsById, deck) => {
