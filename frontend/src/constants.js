@@ -20,6 +20,14 @@ export const COLOR_ACTIONS = Object.freeze(['REVERSE', 'DRAW_TWO', 'SKIP']);
 
 export const WILD_ACTIONS = Object.freeze(['WILD', 'WILD_DRAW_FOUR']);
 
+export const ACTIONS = Object.freeze({
+  REVERSE: 'reverse',
+  SKIP: 'skip',
+  DRAW_TWO: 'draw_two',
+  WILD: 'wild',
+  WILD_DRAW_FOUR: 'wild_draw_four'
+})
+
 // move info
 export const MOVE_TYPES = Object.freeze({
   START_GAME: 'start_game',

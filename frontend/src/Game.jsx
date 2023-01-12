@@ -3,6 +3,9 @@ import client from '@urturn/client'
 import styles from './Game.module.css';
 import { MOVE_TYPES } from './constants';
 import Card from './Card';
+import { Grid } from '@mui/material';
+import DiscardPile from './DiscardPile';
+import PlayerHand from './PlayerHand';
 
 const EMPTY_CARD = {
   type: '',
@@ -47,23 +50,34 @@ function Game() {
     setupCurPlr();
   }, []);
 
-  const topCard = discardPile.length > 0 ? discardPile[discardPile.length - 1] : EMPTY_CARD;
-
   return (
     <div>
-      <h1 className={styles['game-title']}>TODO: Implement your game UI here!</h1>
-      <p className={styles.description}>Current Plr: {curPlr?.username}</p>
-      <p className={styles.description}>Player to Move: {players && players[currentPlayerIndex] && players[currentPlayerIndex].id}</p>
-      <div style={{ color: 'white'}}>TOP CARD: {topCard.value + ' ' + topCard.color}</div>
-      <button onClick={() => client.makeMove({ type: MOVE_TYPES.START_GAME })}>START GAME</button>
-      <p></p>
-      <button onClick={() => client.makeMove({ type: MOVE_TYPES.DRAW_CARD })}>DRAW CARD</button>
-      <p></p>
-      {
-        (curPlr && playerHandsById && playerHandsById[curPlr.id]) && playerHandsById[curPlr.id].map((card) => 
-          <Card card={card} />
-        )
-      }
+      <Grid
+        container
+        height="100vh"
+        width="100vw"
+        direction="column"
+        justifyContent="space-between"
+        alignItems="center"
+        overflow="hidden"
+      >
+        <Grid item>
+          <button onClick={() => client.makeMove({ type: MOVE_TYPES.START_GAME })}>START GAME</button>
+        </Grid>
+        <Grid item>
+          <button onClick={() => client.makeMove({ type: MOVE_TYPES.DRAW_CARD })}>DRAW CARD</button>
+        </Grid>
+        <Grid item>
+          <p className={styles.description}>Current Plr: {curPlr?.username}</p>
+          <p className={styles.description}>Player to Move: {players && players[currentPlayerIndex] && players[currentPlayerIndex].id}</p>
+        </Grid>
+        <Grid item>
+          <DiscardPile discardPile={discardPile} />
+        </Grid>
+        <Grid item width="100vw">
+          <PlayerHand curPlr={curPlr} playerHandsById={playerHandsById}/>
+        </Grid>
+      </Grid>
     </div>
   );
 }
